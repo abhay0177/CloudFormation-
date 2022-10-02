@@ -1,0 +1,437 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: VPC and subnets as base for an ECS cluster
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: ecs-package
+
+Mappings:
+  SubnetConfig:
+    VPC:
+      CIDR: '10.0.0.0/16'
+    PublicSubnet1:
+      CIDR: '10.0.0.0/20'
+    PublicSubnet2:
+      CIDR: '10.0.16.0/20'
+    PublicSubnet3:
+      CIDR: '10.0.51.0/20'
+    PrivateSubnet1:
+      CIDR: '10.0.89.0/20'
+    PrivateSubnet2:
+      CIDR: '10.0.176.0/20'
+    PrivateSubnet3:
+      CIDR: '10.0.39.0/20'
+    PrivateSubnet4db:
+      CIDR: '10.0.156.0/20'
+    PrivateSubnet5db:
+      CIDR: '10.0.174.0/20'
+    PrivateSubnet6db:
+      CIDR: '10.0.198.0/20'
+    
+    
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      CidrBlock: !FindInMap ['SubnetConfig', 'VPC', 'CIDR']
+
+  PublicSubnetOne:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+          Fn::Select:
+          - 0
+          - Fn::GetAZs: {Ref: 'AWS::Region'}
+      VpcId: !Ref VPC
+      CidrBlock: !FindInMap ['SubnetConfig', 'PublicSubnet1', 'CIDR']
+      MapPublicIpOnLaunch: true
+  
+  PublicSubnetTwo:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+         Fn::Select:
+         - 1
+         - Fn::GetAZs: {Ref: 'AWS::Region'}
+      VpcId: !Ref VPC
+      CidrBlock: !FindInMap ['SubnetConfig', 'PublicSubnet2', 'CIDR']
+      MapPublicIpOnLaunch: true
+
+  PublicSubnetThree:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+         Fn::Select:
+         - 0
+         - Fn::GetAZs: {Ref: 'AWS::Region'}
+      VpcId: !Ref VPC
+      CidrBlock: !FindInMap ['SubnetConfig', 'PublicSubnet3', 'CIDR']
+      MapPublicIpOnLaunch: true
+
+
+  PrivateSubnetOne:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+         Fn::Select:
+         - 0
+         - Fn::GetAZs: {Ref: 'AWS::Region'}
+      VpcId: !Ref VPC
+      CidrBlock: !FindInMap ['SubnetConfig', 'PrivateSubnet1', 'CIDR']
+      MapPublicIpOnLaunch: false
+
+  PrivateSubnetTwo:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+         Fn::Select:
+         - 1
+         - Fn::GetAZs: {Ref: 'AWS::Region'}
+      VpcId: !Ref VPC
+      CidrBlock: !FindInMap ['SubnetConfig', 'PrivateSubnet2', 'CIDR']
+      MapPublicIpOnLaunch: false
+
+  PrivateSubnetThree:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+         Fn::Select:
+         - 0
+         - Fn::GetAZs: {Ref: 'AWS::Region'}
+      VpcId: !Ref VPC
+      CidrBlock: !FindInMap ['SubnetConfig', 'PrivateSubnet3', 'CIDR']
+      MapPublicIpOnLaunch: false
+
+  PrivateSubnetFourdb:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+         Fn::Select:
+         - 1
+         - Fn::GetAZs: {Ref: 'AWS::Region'}
+      VpcId: !Ref VPC
+      CidrBlock: !FindInMap ['SubnetConfig', 'PrivateSubnet4db', 'CIDR']
+      MapPublicIpOnLaunch: false
+
+  PrivateSubnetFivedb:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+         Fn::Select:
+         - 0
+         - Fn::GetAZs: {Ref: 'AWS::Region'}
+      VpcId: !Ref VPC
+      CidrBlock: !FindInMap ['SubnetConfig', 'PrivateSubnet5db', 'CIDR']
+      MapPublicIpOnLaunch: false
+
+  PrivateSubnetSixdb:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone:
+         Fn::Select:
+         - 1
+         - Fn::GetAZs: {Ref: 'AWS::Region'}
+      VpcId: !Ref 'VPC'
+      CidrBlock: !FindInMap ['SubnetConfig', 'PrivateSubnet6db', 'CIDR']
+      MapPublicIpOnLaunch: false
+
+  NatGateway1EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: GatewayAttachment
+    Properties:
+      Domain: vpc
+
+  NatGateway2EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: GatewayAttachment
+    Properties:
+      Domain: vpc
+
+  NatGateway3EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: GatewayAttachment
+    Properties:
+      Domain: vpc
+
+  NatGateway4EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: GatewayAttachment
+    Properties:
+      Domain: vpc
+
+  NatGateway5EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: GatewayAttachment
+    Properties:
+      Domain: vpc
+
+  NatGateway6EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: GatewayAttachment
+    Properties:
+      Domain: vpc
+
+  NatGateway1:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway1EIP.AllocationId
+      SubnetId: !Ref PublicSubnetOne
+
+  NatGateway2:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway2EIP.AllocationId
+      SubnetId: !Ref PublicSubnetTwo
+
+  NatGateway3:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway3EIP.AllocationId
+      SubnetId: !Ref PublicSubnetThree
+
+  NatGateway4:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway4EIP.AllocationId
+      SubnetId: !Ref PublicSubnetOne
+
+  NatGateway5:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway5EIP.AllocationId
+      SubnetId: !Ref PublicSubnetTwo
+
+  NatGateway6:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway6EIP.AllocationId
+      SubnetId: !Ref PublicSubnetThree
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref 'InternetGateway'
+
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachment
+    Properties:
+      RouteTableId: !Ref 'PublicRouteTable'
+      DestinationCidrBlock: '0.0.0.0/0'
+      GatewayId: !Ref 'InternetGateway'
+
+  PublicSubnetOneRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetOne
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnetTwoRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetTwo
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnetThreeRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnetThree
+      RouteTableId: !Ref PublicRouteTable
+
+
+  PrivateRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PrivateRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway1
+
+  PrivateSubnetOneRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      SubnetId: !Ref PrivateSubnetOne
+
+  PrivateRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PrivateRoute2:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway2
+
+  PrivateSubnetTwoRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      SubnetId: !Ref PrivateSubnetTwo
+
+  PrivateRouteTable3:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PrivateRoute3:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable3
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway3
+
+  PrivateSubnetThreeRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable3
+      SubnetId: !Ref PrivateSubnetThree
+
+  PrivateRouteTable4:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PrivateRoute4:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable4
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway4
+
+  PrivateSubnetFourdbRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable4
+      SubnetId: !Ref PrivateSubnetFourdb
+
+  PrivateRouteTable4:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PrivateRoute5:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable5
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway5
+
+  PrivateSubnetFivedbRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable5
+      SubnetId: !Ref PrivateSubnetFivedb
+
+  PrivateRouteTable5:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PrivateRouteTable6:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  PrivateRoute6:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable6
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway6
+
+  PrivateSubnetSixdbRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable6
+      SubnetId: !Ref PrivateSubnetSixdb
+
+  NoIngressSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "no-ingress-sg"
+      GroupDescription: "Security group with no ingress rule"
+      VpcId: !Ref VPC    
+
+Outputs:
+  VpcId:
+    Description: The ID of the VPC that this stack is deployed in
+    Value: !Ref VPC
+    Export:
+      Name: !Sub ${EnvironmentName}:VpcId
+      
+  PublicSubnetOne:
+    Description: Public subnet one
+    Value: !Ref 'PublicSubnetOne'
+    Export:
+      Name: !Sub ${EnvironmentName}:PublicSubnetOne
+
+  PublicSubnetTwo:
+    Description: Public subnet two
+    Value: !Ref 'PublicSubnetTwo'
+    Export:
+      Name: !Sub ${EnvironmentName}:PublicSubnetTwo
+
+  PublicSubnetThree:
+    Description: Public subnet three
+    Value: !Ref 'PublicSubnetThree'
+    Export:
+      Name: !Sub ${EnvironmentName}:PublicSubnetThree
+
+  PrivateSubnetOne:
+    Description: Private subnet one
+    Value: !Ref 'PrivateSubnetOne'
+    Export:
+      Name: !Sub ${EnvironmentName}:PrivateSubnetOne
+
+  PrivateSubnetTwo:
+    Description: Private subnet two
+    Value: !Ref 'PrivateSubnetTwo'
+    Export:
+      Name: !Sub ${EnvironmentName}:PrivateSubnetTwo
+
+  PrivateSubnetThree:
+    Description: Private subnet three
+    Value: !Ref 'PrivateSubnetThree'
+    Export:
+      Name: !Sub ${EnvironmentName}:PrivateSubnetThree
+
+  PrivateSubnetFourdb:
+    Description: Private subnet four
+    Value: !Ref 'PrivateSubnetFourdb'
+    Export:
+      Name: !Sub ${EnvironmentName}:PrivateSubnetFourdb
+
+  PrivateSubnetFivedb:
+    Description: Private subnet five
+    Value: !Ref 'PrivateSubnetFivedb'
+    Export:
+      Name: !Sub ${EnvironmentName}:PrivateSubnetFivedb
+
+  PrivateSubnetSixdb:
+    Description: Private subnet six
+    Value: !Ref 'PrivateSubnetSixdb'
+    Export:
+      Name: !Sub ${EnvironmentName}:PrivateSubnetSixdb
+
+  NoIngressSecurityGroup:
+    Description: Security group with no ingress rule
+    Value: !Ref NoIngressSecurityGroup
